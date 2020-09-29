@@ -1,57 +1,52 @@
-const http = require('http');
-const url = require('url');
-const fs = require('fs');
-
+const express = require('express');
+const path = require('path');
 const data = require('./data');
 
-const { person } = data;
+//initialize express
+const app = express();
 
-/*
-  GET METHOD
-  POST METHOD
-  PATCH/PUT METHOD
-  DELETE METHOD
-*/
+//ejs set up
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'public'));
 
-/**
- * We created home route
- * create a rout for about page, contact page
- */
-const server = http.createServer((req, res) => {
-  if (req.url === '/') {
-    //read file
-    const homePage = fs.readFileSync('./public/index.html', 'utf-8');
+app.use('/static', express.static(path.join(__dirname, 'static')));
 
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.write(homePage);
-
-    res.end();
-  } else if (req.url === '/about') {
-    const aboutPage = fs.readFileSync('./public/about.html', 'utf-8');
-
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.write(aboutPage);
-    res.end();
-  } else if (req.url === '/contact-us') {
-    const contactPage = fs.readFileSync('./public/contact.html', 'utf-8');
-
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.write(contactPage);
-    res.end();
-  } else if (req.url === '/api/person') {
-    //sending response as json
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.write(JSON.stringify({ message: person }));
-    res.end();
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/html' });
-    res.write('<h1>404 page not found</h1>');
-    res.end();
-  }
+//create routes
+app.get('/', (req, res) => {
+  res.render('index.ejs', {
+    title: 'Home | welcome',
+  });
 });
 
-const port = 3000;
-
-server.listen(port, () => {
-  console.log(`server is running on localhost:${port}`);
+app.get('/about', (req, res) => {
+  res.render('about.ejs', {
+    title: 'About',
+  });
 });
+
+app.get('/contact-us', (req, res) => {
+  res.render('contact.ejs', {
+    title: 'Contact-us',
+  });
+});
+
+app.get('/api/person/:id', (req, res) => {
+  console.log(req.params);
+  res.json({ message: data, personId: req.params.id });
+});
+
+app.get('/api/person', (req, res) => {
+  res.json({ message: data });
+});
+
+//handling 404 errors
+app.use('*', (req, res) => {
+  res.render('404.ejs', {
+    title: 'Page not found',
+    url: req.originalUrl,
+  });
+});
+
+//listen to my port
+const port = 4000;
+app.listen(port, () => console.log(`Server is running on localhost:${port}`));
